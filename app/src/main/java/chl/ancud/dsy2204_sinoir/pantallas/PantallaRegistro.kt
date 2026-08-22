@@ -1,5 +1,6 @@
 package chl.ancud.dsy2204_sinoir.pantallas
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,6 +42,7 @@ import androidx.navigation.NavHostController
 import chl.ancud.dsy2204_sinoir.datos.RepositorioUsuarios
 import chl.ancud.dsy2204_sinoir.modelo.Usuario
 import chl.ancud.dsy2204_sinoir.navegacion.Rutas
+import chl.ancud.dsy2204_sinoir.ui.theme.VerdeExito
 
 // Opciones para el combo box de tipo de discapacidad auditiva
 private val opcionesTipoDiscapacidad = listOf("Sordera total", "Hipoacusia", "Otro")
@@ -58,6 +60,7 @@ fun PantallaRegistro(controladorNavegacion: NavHostController) {
     var contrasena by remember { mutableStateOf("") }
     var confirmarContrasena by remember { mutableStateOf("") }
     var mensaje by remember { mutableStateOf("") }
+    var guardaExito by remember {mutableStateOf(false)}
 
     // Combo box: tipo de discapacidad
     var menuDiscapacidadAbierto by remember { mutableStateOf(false) }
@@ -192,7 +195,11 @@ fun PantallaRegistro(controladorNavegacion: NavHostController) {
 
         if (mensaje != "") {
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = mensaje, color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
+            if (guardaExito) {
+                Text(text = mensaje, color = VerdeExito , fontSize = 13.sp)
+            }else {
+                Text(text = mensaje, color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -214,10 +221,12 @@ fun PantallaRegistro(controladorNavegacion: NavHostController) {
                         tipoComunicacion = comunicacionSeleccionada
                     )
                     val seGuardo = RepositorioUsuarios.agregarUsuario(usuarioNuevo)
-                    mensaje = if (seGuardo) {
-                        "Usuario registrado con éxito"
+                    if (seGuardo) {
+                        mensaje = "Usuario registrado con éxito"
+                        Log.d("guardaExito", "guarda")
+                        guardaExito = true
                     } else {
-                        "Ya se alcanzó el máximo de 5 usuarios registrados"
+                        mensaje = "Ya se alcanzó el máximo de 5 usuarios registrados"
                     }
                 }
             },

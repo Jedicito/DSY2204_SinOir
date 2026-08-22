@@ -96,7 +96,7 @@ fun PantallaLogin(controladorNavegacion: NavHostController) {
                 val usuarioEncontrado = RepositorioUsuarios.buscarUsuario(nombreUsuario, contrasena)
                 if (usuarioEncontrado != null) {
                     mensajeError = ""
-                    controladorNavegacion.navigate(Rutas.INICIO)
+                    controladorNavegacion.navigate(Rutas.crearRutaInicio(nombreUsuario))
                 } else {
                     mensajeError = "Usuario o contraseña incorrectos"
                 }

@@ -29,7 +29,7 @@ private val opcionesRapidas = listOf("Escribir", "Hablar", "Alertas", "Contactos
 
 // Pantalla de bienvenida que se muestra después de un login exitoso
 @Composable
-fun PantallaInicio(controladorNavegacion: NavHostController) {
+fun PantallaInicio(controladorNavegacion: NavHostController, nombreUsuario: String) {
 
     Column(
         modifier = Modifier
@@ -37,7 +37,7 @@ fun PantallaInicio(controladorNavegacion: NavHostController) {
             .padding(24.dp)
     ) {
         Text(
-            text = "¡Bienvenido a dsy2204_sinoir!",
+            text = "¡Bienvenido $nombreUsuario!",
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold
         )
@@ -45,6 +45,11 @@ fun PantallaInicio(controladorNavegacion: NavHostController) {
         Spacer(modifier = Modifier.height(4.dp))
 
         Text(text = "Elige una opción para comenzar")
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(text = "Solo para mostrar una grilla")
+
 
         Spacer(modifier = Modifier.height(20.dp))
 
