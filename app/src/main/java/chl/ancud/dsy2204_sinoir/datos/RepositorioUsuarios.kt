@@ -14,8 +14,8 @@ object RepositorioUsuarios {
     // tener que registrarse primero
     init {
         listaUsuarios[0] = Usuario(
-            nombreUsuario = "usuario_demo",
-            correo = "demo@correo.com",
+            nombreUsuario = "cesar",
+            correo = "cesar@correo.com",
             contrasena = "12345",
             tipoComunicacion = "Lengua de señas"
         )

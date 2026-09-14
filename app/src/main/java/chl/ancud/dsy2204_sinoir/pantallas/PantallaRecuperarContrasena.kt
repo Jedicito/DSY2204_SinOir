@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import chl.ancud.dsy2204_sinoir.datos.RepositorioUsuarios
 import chl.ancud.dsy2204_sinoir.navegacion.Rutas
+import chl.ancud.dsy2204_sinoir.utils.correoEsValido
 
 // Vista para recuperar la contraseña. Por ahora solo valida que el correo
 // exista en el repositorio y simula el envío de un correo de recuperación.
@@ -78,13 +79,18 @@ fun PantallaRecuperarContrasena(controladorNavegacion: NavHostController) {
 
         Button(
             onClick = {
-                val usuarioEncontrado = RepositorioUsuarios.buscarUsuarioPorCorreo(correo)
-                if (usuarioEncontrado != null) {
-                    esError = false
-                    mensaje = "Se enviaron las instrucciones a $correo"
-                } else {
+                if (!correoEsValido(correo)) {
                     esError = true
-                    mensaje = "No encontramos una cuenta con ese correo"
+                    mensaje = "El correo no tiene un formato válido"
+                } else {
+                    val usuarioEncontrado = RepositorioUsuarios.buscarUsuarioPorCorreo(correo)
+                    if (usuarioEncontrado != null) {
+                        esError = false
+                        mensaje = "Se enviaron las instrucciones a $correo"
+                    } else {
+                        esError = true
+                        mensaje = "No encontramos una cuenta con ese correo"
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth()

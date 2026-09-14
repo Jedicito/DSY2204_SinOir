@@ -43,6 +43,7 @@ import chl.ancud.dsy2204_sinoir.datos.RepositorioUsuarios
 import chl.ancud.dsy2204_sinoir.modelo.Usuario
 import chl.ancud.dsy2204_sinoir.navegacion.Rutas
 import chl.ancud.dsy2204_sinoir.ui.theme.VerdeExito
+import chl.ancud.dsy2204_sinoir.utils.validarRegistro
 
 // Opciones para el combo box de tipo de discapacidad auditiva
 private val opcionesTipoDiscapacidad = listOf("Sordera total", "Hipoacusia", "Otro")
@@ -207,12 +208,16 @@ fun PantallaRegistro(controladorNavegacion: NavHostController) {
         // Botón: registrar
         Button(
             onClick = {
-                if (nombreUsuario == "" || correo == "" || contrasena == "") {
-                    mensaje = "Debes completar todos los campos"
-                } else if (contrasena != confirmarContrasena) {
-                    mensaje = "Las contraseñas no coinciden"
-                } else if (!aceptaTerminos) {
-                    mensaje = "Debes aceptar los términos y condiciones"
+                val error = validarRegistro(
+                    nombreUsuario = nombreUsuario,
+                    correo = correo,
+                    contrasena = contrasena,
+                    confirmarContrasena = confirmarContrasena,
+                    aceptaTerminos = aceptaTerminos
+                )
+                if (error != null) {
+                    mensaje = error
+                    guardaExito = false
                 } else {
                     val usuarioNuevo = Usuario(
                         nombreUsuario = nombreUsuario,
@@ -223,7 +228,6 @@ fun PantallaRegistro(controladorNavegacion: NavHostController) {
                     val seGuardo = RepositorioUsuarios.agregarUsuario(usuarioNuevo)
                     if (seGuardo) {
                         mensaje = "Usuario registrado con éxito"
-                        Log.d("guardaExito", "guarda")
                         guardaExito = true
                     } else {
                         mensaje = "Ya se alcanzó el máximo de 5 usuarios registrados"
