@@ -206,6 +206,7 @@ fun PantallaRegistro(controladorNavegacion: NavHostController) {
         Spacer(modifier = Modifier.height(16.dp))
 
         // Botón: registrar
+        // Las validaciones se cambiaron a Validaciones.kt. NO valida cant de usuarios.
         Button(
             onClick = {
                 val error = validarRegistro(

@@ -1,7 +1,7 @@
 package chl.ancud.dsy2204_sinoir.utils
 
-// Valida el formato de un correo: que no esté vacío, que tenga un @
-// y al menos un punto después del @.
+// Valida el formato de un correo: que no esté vacío.
+// Que tenga un @ y al menos un punto después del @.
 fun correoEsValido(correo: String): Boolean {
     return correo.contains("@") && correo.substringAfter("@").contains(".")
 }
