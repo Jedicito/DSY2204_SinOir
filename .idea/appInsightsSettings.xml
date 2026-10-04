@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="chl.ancud.dsy2204_sinoir" />
+                  <option name="mobileSdkAppId" value="1:694912292868:android:25cebfee337ce3adc07d51" />
+                  <option name="projectId" value="dsy2204-sinoir" />
+                  <option name="projectNumber" value="694912292868" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
