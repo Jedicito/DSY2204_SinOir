@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -16,18 +17,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import chl.ancud.dsy2204_sinoir.datos.RepositorioUsuarios
-import chl.ancud.dsy2204_sinoir.navegacion.Rutas
+import chl.ancud.dsy2204_sinoir.ui.theme.VerdeExito
 import chl.ancud.dsy2204_sinoir.utils.correoEsValido
 
-// Vista para recuperar la contraseña. Por ahora solo valida que el correo
-// exista en el repositorio y simula el envío de un correo de recuperación.
+// Vista para recuperar la contraseña.
+// En esta fase (en memoria) solo revisa que el correo exista.
+// Con Firebase enviará el correo de recuperación de verdad.
 @Composable
 fun PantallaRecuperarContrasena(controladorNavegacion: NavHostController) {
 
@@ -38,15 +39,11 @@ fun PantallaRecuperarContrasena(controladorNavegacion: NavHostController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(24.dp)
     ) {
-        Spacer(modifier = Modifier.height(48.dp))
-
-        Text(
-            text = "Recuperar contraseña",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold
+        EncabezadoPantalla(
+            titulo = "Recuperar contraseña",
+            alVolver = { controladorNavegacion.popBackStack() }
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -60,9 +57,10 @@ fun PantallaRecuperarContrasena(controladorNavegacion: NavHostController) {
 
         OutlinedTextField(
             value = correo,
-            onValueChange = { correo = it },
+            onValueChange = { correo = it.trim() },
             label = { Text("Correo electrónico") },
             singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -70,7 +68,7 @@ fun PantallaRecuperarContrasena(controladorNavegacion: NavHostController) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = mensaje,
-                color = if (esError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                color = if (esError) MaterialTheme.colorScheme.error else VerdeExito,
                 fontSize = 13.sp
             )
         }
@@ -83,13 +81,14 @@ fun PantallaRecuperarContrasena(controladorNavegacion: NavHostController) {
                     esError = true
                     mensaje = "El correo no tiene un formato válido"
                 } else {
-                    val usuarioEncontrado = RepositorioUsuarios.buscarUsuarioPorCorreo(correo)
-                    if (usuarioEncontrado != null) {
-                        esError = false
-                        mensaje = "Se enviaron las instrucciones a $correo"
-                    } else {
-                        esError = true
-                        mensaje = "No encontramos una cuenta con ese correo"
+                    RepositorioUsuarios.recuperarContrasena(correo) { error ->
+                        if (error == null) {
+                            esError = false
+                            mensaje = "Se enviaron las instrucciones a $correo"
+                        } else {
+                            esError = true
+                            mensaje = error
+                        }
                     }
                 }
             },
@@ -101,7 +100,7 @@ fun PantallaRecuperarContrasena(controladorNavegacion: NavHostController) {
         Spacer(modifier = Modifier.height(16.dp))
 
         // Vínculo: volver al login
-        TextButton(onClick = { controladorNavegacion.navigate(Rutas.LOGIN) }) {
+        TextButton(onClick = { controladorNavegacion.popBackStack() }) {
             Text("Volver a Ingresar")
         }
     }

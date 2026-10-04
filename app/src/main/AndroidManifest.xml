@@ -2,6 +2,21 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Buscar dispositivo: permiso para vibrar (no se pide al usuario, se otorga solo) -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- Desde Android 11 hay que declarar qué servicios externos usa la app.
+         Sin esto, el texto a voz (Hablar) y el reconocimiento de voz (Escribir)
+         pueden no encontrar el motor de Google. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"

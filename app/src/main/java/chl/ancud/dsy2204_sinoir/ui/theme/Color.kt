@@ -12,3 +12,7 @@ val Pink40 = Color(0xFF7D5260)
 
 val VerdeExito = Color(0xFF4CAF50)
 val VerdeExitoClaro = Color(0xFF81C784)
+
+// Colores del parpadeo de pantalla en "Buscar dispositivo"
+val AlertaAmarillo = Color(0xFFFFEB3B)
+val AlertaRojo = Color(0xFFD32F2F)

@@ -1,7 +1,6 @@
 package chl.ancud.dsy2204_sinoir.pantallas
 
-import android.util.Log
-import androidx.compose.foundation.layout.Arrangement
+import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,9 +12,11 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -24,7 +25,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -34,34 +34,31 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import chl.ancud.dsy2204_sinoir.datos.RepositorioUsuarios
 import chl.ancud.dsy2204_sinoir.modelo.Usuario
-import chl.ancud.dsy2204_sinoir.navegacion.Rutas
-import chl.ancud.dsy2204_sinoir.ui.theme.VerdeExito
+import chl.ancud.dsy2204_sinoir.modelo.opcionesComunicacion
+import chl.ancud.dsy2204_sinoir.modelo.opcionesTipoDiscapacidad
 import chl.ancud.dsy2204_sinoir.utils.validarRegistro
 
-// Opciones para el combo box de tipo de discapacidad auditiva
-private val opcionesTipoDiscapacidad = listOf("Sordera total", "Hipoacusia", "Otro")
-
-// Opciones para los radio button de forma de comunicación preferida
-private val opcionesComunicacion = listOf("Lengua de señas", "Lectura labial", "Texto escrito")
-
-// Vista de registro de usuario. Guarda los datos en el arreglo del
-// RepositorioUsuarios y muestra una tabla con los usuarios ya registrados.
+// Vista de registro de usuario.
+// Al registrarse con éxito muestra un aviso (Toast) y vuelve al Login.
 @Composable
 fun PantallaRegistro(controladorNavegacion: NavHostController) {
+
+    val contexto = LocalContext.current
 
     var nombreUsuario by remember { mutableStateOf("") }
     var correo by remember { mutableStateOf("") }
     var contrasena by remember { mutableStateOf("") }
     var confirmarContrasena by remember { mutableStateOf("") }
-    var mensaje by remember { mutableStateOf("") }
-    var guardaExito by remember {mutableStateOf(false)}
+    var mensajeError by remember { mutableStateOf("") }
 
     // Combo box: tipo de discapacidad
     var menuDiscapacidadAbierto by remember { mutableStateOf(false) }
@@ -79,10 +76,9 @@ fun PantallaRegistro(controladorNavegacion: NavHostController) {
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
-        Text(
-            text = "Registro de usuario",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold
+        EncabezadoPantalla(
+            titulo = "Registro de usuario",
+            alVolver = { controladorNavegacion.popBackStack() }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -99,9 +95,10 @@ fun PantallaRegistro(controladorNavegacion: NavHostController) {
 
         OutlinedTextField(
             value = correo,
-            onValueChange = { correo = it },
+            onValueChange = { correo = it.trim() },
             label = { Text("Correo electrónico") },
             singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -110,7 +107,7 @@ fun PantallaRegistro(controladorNavegacion: NavHostController) {
         OutlinedTextField(
             value = contrasena,
             onValueChange = { contrasena = it },
-            label = { Text("Contraseña") },
+            label = { Text("Contraseña (mínimo 6 caracteres)") },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth()
@@ -194,19 +191,14 @@ fun PantallaRegistro(controladorNavegacion: NavHostController) {
             Text(text = "Acepto los términos y condiciones")
         }
 
-        if (mensaje != "") {
+        if (mensajeError != "") {
             Spacer(modifier = Modifier.height(8.dp))
-            if (guardaExito) {
-                Text(text = mensaje, color = VerdeExito , fontSize = 13.sp)
-            }else {
-                Text(text = mensaje, color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
-            }
+            Text(text = mensajeError, color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // Botón: registrar
-        // Las validaciones se cambiaron a Validaciones.kt. NO valida cant de usuarios.
         Button(
             onClick = {
                 val error = validarRegistro(
@@ -217,21 +209,21 @@ fun PantallaRegistro(controladorNavegacion: NavHostController) {
                     aceptaTerminos = aceptaTerminos
                 )
                 if (error != null) {
-                    mensaje = error
-                    guardaExito = false
+                    mensajeError = error
                 } else {
                     val usuarioNuevo = Usuario(
                         nombreUsuario = nombreUsuario,
                         correo = correo,
-                        contrasena = contrasena,
+                        tipoDiscapacidad = tipoDiscapacidadSeleccionada,
                         tipoComunicacion = comunicacionSeleccionada
                     )
-                    val seGuardo = RepositorioUsuarios.agregarUsuario(usuarioNuevo)
-                    if (seGuardo) {
-                        mensaje = "Usuario registrado con éxito"
-                        guardaExito = true
-                    } else {
-                        mensaje = "Ya se alcanzó el máximo de 5 usuarios registrados"
+                    RepositorioUsuarios.registrar(usuarioNuevo, contrasena) { errorRegistro ->
+                        if (errorRegistro != null) {
+                            mensajeError = errorRegistro
+                        } else {
+                            Toast.makeText(contexto, "Cuenta creada. Ya puedes ingresar", Toast.LENGTH_LONG).show()
+                            controladorNavegacion.popBackStack()
+                        }
                     }
                 }
             },
@@ -243,29 +235,8 @@ fun PantallaRegistro(controladorNavegacion: NavHostController) {
         Spacer(modifier = Modifier.height(8.dp))
 
         // Vínculo: volver al login
-        TextButton(onClick = { controladorNavegacion.navigate(Rutas.LOGIN) }) {
+        TextButton(onClick = { controladorNavegacion.popBackStack() }) {
             Text("Ya tengo cuenta, volver a Ingresar")
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Tabla simple con los usuarios ya registrados
-        Text(text = "Usuarios registrados", fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Usuario", modifier = Modifier.padding(4.dp).fillMaxWidth().weight(1f), fontWeight = FontWeight.Medium)
-            Text(text = "Correo", modifier = Modifier.padding(4.dp).fillMaxWidth().weight(1f), fontWeight = FontWeight.Medium)
-        }
-
-        RepositorioUsuarios.obtenerUsuariosRegistrados().forEach { usuarioRegistrado ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = usuarioRegistrado.nombreUsuario, modifier = Modifier.padding(4.dp).weight(1f))
-                Text(text = usuarioRegistrado.correo, modifier = Modifier.padding(4.dp).weight(1f))
-            }
         }
     }
 }

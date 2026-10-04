@@ -1,66 +1,103 @@
 package chl.ancud.dsy2204_sinoir.datos
 
 import chl.ancud.dsy2204_sinoir.modelo.Usuario
+import java.util.UUID
 
-// Repositorio simple que guarda a los usuarios en un arreglo de tamaño 5,
+// Repositorio de usuarios EN MEMORIA (fase 1, antes de Firebase).
+//
+// Todas las funciones reciben una lambda "alTerminar" en vez de devolver
+// el resultado directo. Así es como funciona Firebase: la respuesta llega
+// después, cuando el servidor contesta. Cuando cambiemos este archivo por
+// la versión con Firebase, las pantallas casi no van a cambiar.
 object RepositorioUsuarios {
 
-    val listaUsuarios = arrayOfNulls<Usuario>(5)
+    private val listaUsuarios = mutableListOf<Usuario>()
 
-    // Cantidad de usuarios que ya se registraron
-    private var cantidadRegistrados = 0
+    // Simula a Firebase Authentication: guarda correo -> contraseña,
+    // separado de los datos del usuario
+    private val contrasenas = mutableMapOf<String, String>()
 
-    // Se deja un usuario de prueba para poder probar el login sin
-    // tener que registrarse primero
+    // Usuario que tiene la sesión iniciada (null si no hay sesión)
+    var usuarioActual: Usuario? = null
+        private set
+
+    // Usuario de prueba para no tener que registrarse cada vez.
+    // Desaparece en la fase con Firebase.
     init {
-        listaUsuarios[0] = Usuario(
+        val usuarioPrueba = Usuario(
+            id = "usuario_prueba",
             nombreUsuario = "cesar",
-            correo = "cesar@correo.com",
-            contrasena = "12345",
+            correo = "cesar@sinoir.cl",
+            tipoDiscapacidad = "Sordera total",
             tipoComunicacion = "Lengua de señas"
         )
-        cantidadRegistrados = 1
+        listaUsuarios.add(usuarioPrueba)
+        contrasenas[usuarioPrueba.correo] = "123456"
     }
 
-    // Agrega un usuario nuevo al arreglo si todavía queda espacio
-    fun agregarUsuario(usuario: Usuario): Boolean {
-        if (cantidadRegistrados >= listaUsuarios.size) {
-            return false
+    // CREATE: registra un usuario nuevo. Devuelve un mensaje de error, o null si salió bien
+    fun registrar(usuario: Usuario, contrasena: String, alTerminar: (String?) -> Unit) {
+        val correoOcupado = listaUsuarios.any { it.correo == usuario.correo }
+        if (correoOcupado) {
+            alTerminar("Ya existe una cuenta con ese correo")
+            return
         }
-        listaUsuarios[cantidadRegistrados] = usuario
-        cantidadRegistrados++
-        return true
+        val usuarioNuevo = usuario.copy(id = UUID.randomUUID().toString())
+        listaUsuarios.add(usuarioNuevo)
+        contrasenas[usuarioNuevo.correo] = contrasena
+        alTerminar(null)
     }
 
-    // Busca un usuario según su nombre de usuario y contraseña (para el login)
-    fun buscarUsuario(nombreUsuario: String, contrasena: String): Usuario? {
-        for (usuario in listaUsuarios) {
-            if (usuario != null &&
-                usuario.nombreUsuario == nombreUsuario &&
-                usuario.contrasena == contrasena
-            ) {
-                return usuario
-            }
+    // READ: inicia sesión. Devuelve el usuario encontrado, o null si los datos no coinciden
+    fun iniciarSesion(correo: String, contrasena: String, alTerminar: (Usuario?) -> Unit) {
+        val usuarioEncontrado = listaUsuarios.find { it.correo == correo }
+        if (usuarioEncontrado != null && contrasenas[correo] == contrasena) {
+            usuarioActual = usuarioEncontrado
+            alTerminar(usuarioEncontrado)
+        } else {
+            alTerminar(null)
         }
-        return null
     }
 
-    // Busca un usuario por su correo (para recuperar contraseña)
-    fun buscarUsuarioPorCorreo(correo: String): Usuario? {
-        for (usuario in listaUsuarios) {
-            if (usuario != null && usuario.correo == correo) {
-                return usuario
-            }
+    // En memoria no se puede enviar un correo de verdad, solo se revisa que exista.
+    // Con Firebase, aquí se enviará el correo real de recuperación.
+    fun recuperarContrasena(correo: String, alTerminar: (String?) -> Unit) {
+        val existe = listaUsuarios.any { it.correo == correo }
+        if (existe) {
+            alTerminar(null)
+        } else {
+            alTerminar("No encontramos una cuenta con ese correo")
         }
-        return null
     }
 
-    // Devuelve la lista de usuarios que ya están registrados (sin los espacios vacíos)
-    fun obtenerUsuariosRegistrados(): List<Usuario> {
-        return listaUsuarios.filterNotNull()
+    // UPDATE: actualiza los datos del usuario
+    fun actualizar(usuario: Usuario, alTerminar: (String?) -> Unit) {
+        val posicion = listaUsuarios.indexOfFirst { it.id == usuario.id }
+        if (posicion == -1) {
+            alTerminar("No se encontró el usuario")
+            return
+        }
+        listaUsuarios[posicion] = usuario
+        usuarioActual = usuario
+        alTerminar(null)
     }
 
-    fun quedanCupos(): Boolean {
-        return cantidadRegistrados < listaUsuarios.size
+    // DELETE: elimina la cuenta del usuario actual junto con sus mensajes y frases
+    fun eliminarCuenta(alTerminar: (String?) -> Unit) {
+        val usuario = usuarioActual
+        if (usuario == null) {
+            alTerminar("No hay una sesión iniciada")
+            return
+        }
+        RepositorioMensajes.eliminarTodosDelUsuario(usuario.id)
+        RepositorioFrases.eliminarTodasDelUsuario(usuario.id)
+        listaUsuarios.removeAll { it.id == usuario.id }
+        contrasenas.remove(usuario.correo)
+        usuarioActual = null
+        alTerminar(null)
+    }
+
+    fun cerrarSesion() {
+        usuarioActual = null
     }
 }

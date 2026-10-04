@@ -27,13 +27,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import chl.ancud.dsy2204_sinoir.datos.RepositorioUsuarios
 import chl.ancud.dsy2204_sinoir.navegacion.Rutas
+import chl.ancud.dsy2204_sinoir.utils.correoEsValido
 
-// Vista de inicio de sesión. Permite ingresar con usuario y contraseña,
-// e ir a Registro o a Recuperar contraseña.
+// Vista de inicio de sesión. Ahora se ingresa con CORREO y contraseña,
+// porque así funciona Firebase Authentication.
 @Composable
 fun PantallaLogin(controladorNavegacion: NavHostController) {
 
-    var nombreUsuario by remember { mutableStateOf("") }
+    var correo by remember { mutableStateOf("") }
     var contrasena by remember { mutableStateOf("") }
     var mensajeError by remember { mutableStateOf("") }
 
@@ -57,12 +58,13 @@ fun PantallaLogin(controladorNavegacion: NavHostController) {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Input: usuario
+        // Input: correo
         OutlinedTextField(
-            value = nombreUsuario,
-            onValueChange = { nombreUsuario = it },
-            label = { Text("Usuario") },
+            value = correo,
+            onValueChange = { correo = it.trim() },
+            label = { Text("Correo electrónico") },
             singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -93,25 +95,27 @@ fun PantallaLogin(controladorNavegacion: NavHostController) {
         // Botón: ingresar
         Button(
             onClick = {
-                val usuarioEncontrado = RepositorioUsuarios.buscarUsuario(nombreUsuario, contrasena)
-                if (usuarioEncontrado != null) {
-                    mensajeError = ""
-                    controladorNavegacion.navigate(Rutas.crearRutaInicio(nombreUsuario))
+                if (!correoEsValido(correo) || contrasena == "") {
+                    mensajeError = "Ingresa un correo válido y tu contraseña"
                 } else {
-                    mensajeError = "Usuario o contraseña incorrectos"
+                    // La respuesta llega en la lambda (igual que con Firebase)
+                    RepositorioUsuarios.iniciarSesion(correo, contrasena) { usuario ->
+                        if (usuario != null) {
+                            mensajeError = ""
+                            // Se saca el Login de la pila: "atrás" desde el menú cierra la app
+                            controladorNavegacion.navigate(Rutas.HOME_MENU) {
+                                popUpTo(Rutas.LOGIN) { inclusive = true }
+                            }
+                        } else {
+                            mensajeError = "Correo o contraseña incorrectos"
+                        }
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Ingresar")
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "Usuario de prueba: usuario_demo / 12345",
-            fontSize = 12.sp
-        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
