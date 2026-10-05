@@ -45,6 +45,10 @@ android {
 dependencies {
     // Import the Firebase BoM
     implementation(platform(libs.firebase.bom))
+    // Firebase Authentication (cuentas) y Firestore (base de datos).
+    // Ya no existen los módulos "-ktx": las extensiones de Kotlin vienen incluidas aquí.
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

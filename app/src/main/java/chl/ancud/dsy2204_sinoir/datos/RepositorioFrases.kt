@@ -1,64 +1,68 @@
 package chl.ancud.dsy2204_sinoir.datos
 
 import chl.ancud.dsy2204_sinoir.modelo.FraseFrecuente
-import java.util.UUID
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 
-// Repositorio de frases frecuentes EN MEMORIA (fase 1, antes de Firebase).
+// Repositorio de frases frecuentes con FIRESTORE.
+// Colección "frases_frecuentes_xUsuario": cada documento es una frase
+// con el idUsuario de su dueño.
 // Tiene el CRUD completo: agregar, obtener, actualizar y eliminar.
 object RepositorioFrases {
 
-    private val listaFrases = mutableListOf<FraseFrecuente>()
+    private const val COLECCION_FRASES = "frases_frecuentes_xUsuario"
 
-    // Frases de ejemplo para el usuario de prueba
-    init {
-        val frasesDePrueba = listOf(
-            "Soy sordo, por favor escríbame",
-            "Necesito ayuda",
-            "¿Me puede repetir más despacio?"
-        )
-        frasesDePrueba.forEach { texto ->
-            listaFrases.add(
-                FraseFrecuente(
-                    id = UUID.randomUUID().toString(),
-                    idUsuario = "usuario_prueba",
-                    frase = texto
-                )
-            )
-        }
-    }
+    private val baseDatos = Firebase.firestore
 
     // CREATE
     fun agregar(frase: FraseFrecuente, alTerminar: (Boolean) -> Unit) {
-        val fraseNueva = frase.copy(id = UUID.randomUUID().toString())
-        listaFrases.add(fraseNueva)
-        alTerminar(true)
+        val referencia = baseDatos.collection(COLECCION_FRASES).document()
+        referencia.set(frase.copy(id = referencia.id))
+            .addOnSuccessListener { alTerminar(true) }
+            .addOnFailureListener { alTerminar(false) }
     }
 
     // READ
     fun obtenerPorUsuario(idUsuario: String, alTerminar: (List<FraseFrecuente>) -> Unit) {
-        val frasesDelUsuario = listaFrases.filter { it.idUsuario == idUsuario }
-        alTerminar(frasesDelUsuario)
+        baseDatos.collection(COLECCION_FRASES)
+            .whereEqualTo("idUsuario", idUsuario)
+            .get()
+            .addOnSuccessListener { resultado ->
+                alTerminar(resultado.toObjects(FraseFrecuente::class.java))
+            }
+            .addOnFailureListener {
+                alTerminar(emptyList())
+            }
     }
 
     // UPDATE
     fun actualizar(frase: FraseFrecuente, alTerminar: (Boolean) -> Unit) {
-        val posicion = listaFrases.indexOfFirst { it.id == frase.id }
-        if (posicion == -1) {
-            alTerminar(false)
-            return
-        }
-        listaFrases[posicion] = frase
-        alTerminar(true)
+        baseDatos.collection(COLECCION_FRASES).document(frase.id).set(frase)
+            .addOnSuccessListener { alTerminar(true) }
+            .addOnFailureListener { alTerminar(false) }
     }
 
     // DELETE
     fun eliminar(idFrase: String, alTerminar: (Boolean) -> Unit) {
-        val seElimino = listaFrases.removeAll { it.id == idFrase }
-        alTerminar(seElimino)
+        baseDatos.collection(COLECCION_FRASES).document(idFrase).delete()
+            .addOnSuccessListener { alTerminar(true) }
+            .addOnFailureListener { alTerminar(false) }
     }
 
-    // Se usa al eliminar la cuenta
-    fun eliminarTodasDelUsuario(idUsuario: String) {
-        listaFrases.removeAll { it.idUsuario == idUsuario }
+    // Se usa al eliminar la cuenta: borra todas las frases del usuario en un lote
+    fun eliminarTodasDelUsuario(idUsuario: String, alTerminar: () -> Unit) {
+        baseDatos.collection(COLECCION_FRASES)
+            .whereEqualTo("idUsuario", idUsuario)
+            .get()
+            .addOnSuccessListener { resultado ->
+                val lote = baseDatos.batch()
+                for (documento in resultado.documents) {
+                    lote.delete(documento.reference)
+                }
+                lote.commit().addOnCompleteListener { alTerminar() }
+            }
+            .addOnFailureListener {
+                alTerminar()
+            }
     }
 }

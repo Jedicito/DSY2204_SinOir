@@ -37,6 +37,8 @@ fun PantallaLogin(controladorNavegacion: NavHostController) {
     var correo by remember { mutableStateOf("") }
     var contrasena by remember { mutableStateOf("") }
     var mensajeError by remember { mutableStateOf("") }
+    // true mientras se espera la respuesta de Firebase (evita tocar el botón dos veces)
+    var cargando by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -98,8 +100,10 @@ fun PantallaLogin(controladorNavegacion: NavHostController) {
                 if (!correoEsValido(correo) || contrasena == "") {
                     mensajeError = "Ingresa un correo válido y tu contraseña"
                 } else {
-                    // La respuesta llega en la lambda (igual que con Firebase)
+                    cargando = true
+                    // La respuesta de Firebase llega después, en la lambda
                     RepositorioUsuarios.iniciarSesion(correo, contrasena) { usuario ->
+                        cargando = false
                         if (usuario != null) {
                             mensajeError = ""
                             // Se saca el Login de la pila: "atrás" desde el menú cierra la app
@@ -112,9 +116,10 @@ fun PantallaLogin(controladorNavegacion: NavHostController) {
                     }
                 }
             },
+            enabled = !cargando,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Ingresar")
+            Text(if (cargando) "Ingresando..." else "Ingresar")
         }
 
         Spacer(modifier = Modifier.height(16.dp))

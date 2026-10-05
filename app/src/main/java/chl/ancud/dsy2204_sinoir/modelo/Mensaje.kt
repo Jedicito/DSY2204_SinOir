@@ -2,12 +2,13 @@ package chl.ancud.dsy2204_sinoir.modelo
 
 // Un mensaje guardado en el historial.
 // Equivale a la tabla: mensajes_xUsuario [id, idUsuario, texto, origen, fecha]
+// Campos "var" con valores por defecto: así Firestore puede llenarlos.
 data class Mensaje(
-    val id: String = "",
-    val idUsuario: String = "",
-    val texto: String = "",
-    val origen: String = "",
-    val fecha: Long = 0L
+    var id: String = "",
+    var idUsuario: String = "",
+    var texto: String = "",
+    var origen: String = "",
+    var fecha: Long = 0L
 )
 
 // Valores posibles del campo "origen"

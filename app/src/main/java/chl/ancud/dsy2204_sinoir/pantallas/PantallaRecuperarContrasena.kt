@@ -27,8 +27,9 @@ import chl.ancud.dsy2204_sinoir.ui.theme.VerdeExito
 import chl.ancud.dsy2204_sinoir.utils.correoEsValido
 
 // Vista para recuperar la contraseña.
-// En esta fase (en memoria) solo revisa que el correo exista.
-// Con Firebase enviará el correo de recuperación de verdad.
+// Firebase envía el correo de recuperación de verdad.
+// Por seguridad, Firebase no dice si el correo tiene cuenta o no
+// (así nadie puede averiguar qué correos están registrados).
 @Composable
 fun PantallaRecuperarContrasena(controladorNavegacion: NavHostController) {
 
@@ -84,7 +85,7 @@ fun PantallaRecuperarContrasena(controladorNavegacion: NavHostController) {
                     RepositorioUsuarios.recuperarContrasena(correo) { error ->
                         if (error == null) {
                             esError = false
-                            mensaje = "Se enviaron las instrucciones a $correo"
+                            mensaje = "Si existe una cuenta con $correo, te enviamos las instrucciones. Revisa también la carpeta de spam."
                         } else {
                             esError = true
                             mensaje = error

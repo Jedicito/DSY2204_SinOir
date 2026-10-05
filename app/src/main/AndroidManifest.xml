@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Firebase necesita internet (Firebase ya lo agrega solo, se deja explícito para que se vea) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <!-- Buscar dispositivo: permiso para vibrar (no se pide al usuario, se otorga solo) -->
     <uses-permission android:name="android.permission.VIBRATE" />
 

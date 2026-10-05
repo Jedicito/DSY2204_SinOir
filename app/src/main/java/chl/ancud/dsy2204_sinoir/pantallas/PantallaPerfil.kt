@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -69,6 +70,7 @@ fun PantallaPerfil(controladorNavegacion: NavHostController) {
     var nombreUsuario by remember { mutableStateOf(usuario.nombreUsuario) }
     var comunicacionSeleccionada by remember { mutableStateOf(usuario.tipoComunicacion) }
     var mostrarDialogoEliminar by remember { mutableStateOf(false) }
+    var contrasenaEliminar by remember { mutableStateOf("") }
 
     val mensajes = remember { mutableStateListOf<Mensaje>() }
 
@@ -210,7 +212,10 @@ fun PantallaPerfil(controladorNavegacion: NavHostController) {
 
         // Botón: eliminar cuenta (pide confirmación)
         OutlinedButton(
-            onClick = { mostrarDialogoEliminar = true },
+            onClick = {
+                contrasenaEliminar = ""
+                mostrarDialogoEliminar = true
+            },
             colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -218,21 +223,39 @@ fun PantallaPerfil(controladorNavegacion: NavHostController) {
         }
     }
 
-    // Diálogo de confirmación para eliminar la cuenta
+    // Diálogo de confirmación para eliminar la cuenta.
+    // Firebase exige confirmar la contraseña antes de borrar una cuenta.
     if (mostrarDialogoEliminar) {
         AlertDialog(
             onDismissRequest = { mostrarDialogoEliminar = false },
             title = { Text("¿Eliminar tu cuenta?") },
-            text = { Text("Se borrarán tus datos, tus frases y tu historial. No se puede deshacer.") },
+            text = {
+                Column {
+                    Text("Se borrarán tus datos, tus frases y tu historial. No se puede deshacer.")
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = contrasenaEliminar,
+                        onValueChange = { contrasenaEliminar = it },
+                        label = { Text("Confirma tu contraseña") },
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
             confirmButton = {
                 TextButton(onClick = {
-                    mostrarDialogoEliminar = false
-                    RepositorioUsuarios.eliminarCuenta { error ->
-                        if (error == null) {
-                            Toast.makeText(contexto, "Cuenta eliminada", Toast.LENGTH_SHORT).show()
-                            volverAlLogin(controladorNavegacion)
-                        } else {
-                            Toast.makeText(contexto, error, Toast.LENGTH_SHORT).show()
+                    if (contrasenaEliminar == "") {
+                        Toast.makeText(contexto, "Ingresa tu contraseña", Toast.LENGTH_SHORT).show()
+                    } else {
+                        mostrarDialogoEliminar = false
+                        RepositorioUsuarios.eliminarCuenta(contrasenaEliminar) { error ->
+                            if (error == null) {
+                                Toast.makeText(contexto, "Cuenta eliminada", Toast.LENGTH_SHORT).show()
+                                volverAlLogin(controladorNavegacion)
+                            } else {
+                                Toast.makeText(contexto, error, Toast.LENGTH_SHORT).show()
+                            }
                         }
                     }
                 }) {
