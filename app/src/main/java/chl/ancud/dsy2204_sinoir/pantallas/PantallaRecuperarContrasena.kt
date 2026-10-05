@@ -85,7 +85,7 @@ fun PantallaRecuperarContrasena(controladorNavegacion: NavHostController) {
                     RepositorioUsuarios.recuperarContrasena(correo) { error ->
                         if (error == null) {
                             esError = false
-                            mensaje = "Si existe una cuenta con $correo, te enviamos las instrucciones. Revisa también la carpeta de spam."
+                            mensaje = "Si existe una cuenta con $correo, las instrucciones se enviarán a ese correo. Revisa también la carpeta de spam."
                         } else {
                             esError = true
                             mensaje = error
